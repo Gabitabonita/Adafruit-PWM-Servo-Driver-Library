@@ -1,0 +1,323 @@
+/*
+ * **** Suso y Jaume 18/04/16****
+ * Modelo para gestionar 6 servos con 6 joysticks.
+ * 
+ * Cada joytick mueve el correspondiente servo a demanda,
+ * quedándose en la una determinada posició, hasta que se
+ * vuelva a activar el joystick,
+ * 
+ * Los servos 0, 1 y 2, se montan a la izquierda de la mano
+ * y se mueven en un sentido.
+ * Los servos 3, 4 y 5 van montados a la derecha y, por tanto,
+ * hace falta cambiar el sentido el sentido de giro.
+ * Por este motivo, los comandos del 0 al 2 es una, y 
+ *  del 3 al 5 es otra, a la inversa.
+ *  
+ *  Cada servo individualmente, tiene su propia configuración
+ *  aún siendo el mismo fabricante, por tanto, pueden variar
+ *  los valores entre ellos.
+*/
+
+#include <Wire.h>
+#include <Adafruit_PWMServoDriver.h>
+
+Adafruit_PWMServoDriver servos = Adafruit_PWMServoDriver(0x40);
+
+unsigned int pos0 = 172; // ancho de pulso en cuentas para pocicion 0° (modificable)
+unsigned int pos180 = 650; //565; // ancho de pulso en cuentas para la pocicion 180°(modificable)
+
+//-------Servos
+
+int motor0 = 0; // Servo 0
+int motor1 = 1; // Servo 1
+int motor2 = 2; // Servo 2
+int motor3 = 3; // Servo 3
+int motor4 = 4; // Servo 4
+int motor5 = 5; // Servo 5
+
+//------- Joysticks
+
+int joy0 = A0; // Joystick para servo 0
+int joy1 = A1; // Joystick para servo 1
+int joy2 = A2; // Joystick para servo 2
+int joy3 = A3; // Joystick para servo 3
+int joy4 = A4; // Joystick para servo 4
+int joy5 = A5; // Joystick para servo 5
+
+//-------- Variables para posición 0º joysticks
+
+int posicion0 = 0; // Variable posición joystick 0 para servo 0 
+int posicion1 = 0; // Variable posición joystick 1 para servo 1
+int posicion2 = 0; // Variable posición joystick 2 para servo 2
+int posicion3 = 0; // Variable posición joystick 3 para servo 3
+int posicion4 = 0; // Variable posición joystick 4 para servo 4
+int posicion5 = 0; // Variable posición joystick 5 para servo 5
+
+//----------- Variable para posición 180º joysticks
+
+int angular0 = 90; // Variable posición 180º joystick 0 para servo 0
+int angular1 = 90; // Variable posición 180º joystick 1 para servo 1
+int angular2 = 90; // Variable posición 180º joystick 2 para servo 2
+int angular3 = 90; // Variable posición 180º joystick 3 para servo 3
+int angular4 = 90; // Variable posición 180º joystick 4 para servo 4
+int angular5 = 90; // Variable posición 180º joystick 5 para servo 5
+
+//-------------------------------------------------------------------------------
+
+void setup() 
+{
+  servos.begin();  
+  servos.setPWMFreq(60); //Frecuecia PWM de 60Hz o T=16,66ms
+
+Serial.begin(9600);  //para leer los valores en el monitor serie
+}
+
+//--------------------------------------------------------------------------------
+
+// Función que facilita el uso del número de servo y su ángulo
+
+void setServo(uint8_t n_servo, int angulo) 
+{
+  int duty;
+  duty=map(angulo,0,180,pos0, pos180);
+  servos.setPWM(n_servo, 0, duty);  
+}
+
+//----------------------------------------------------------------------------------
+
+void loop() 
+{
+
+ // -----------------------SERVOS IZQUIERDA
+ 
+//---- Joystick y servo 0 ---------------------------- 
+//----------- Extensión (posición 0º) ------------
+
+posicion0 = analogRead(joy0); // Se lee la posición
+if (posicion0<450)
+{
+angular0 = angular0 - 8;  //Rapidez de movimiento del servo
+if(angular0< 0)
+{
+angular0 = 0;  // El giro no supera el valor 0
+}
+setServo(motor0,angular0);   //Se mueve el servo 
+
+// --------- Se leen los valores en el monitor serie ------------
+Serial.print("joystick 0= ");  Serial.print(posicion0);
+Serial.print("   angulo servo 0= ");  Serial.println(angular0);
+
+delay(15);
+}
+
+//------------ Flexió (posición 180º) -------
+if (posicion0>600)
+{
+angular0 = angular0 + 8;   //Modifica velocidad del servo (3 menos, 8 más) 
+if(angular0> 160)    //El giro no supera el valor 160 de fin de carrera  
+{
+angular0 = 160;     //El giro no supera el valor 160 de fin de carrera
+}
+setServo(motor0,angular0);   //Se mueve el servo 
+
+// --------- Se leen los valores en el monitor serie ------------
+Serial.print("joystick 0= ");  Serial.print(posicion0);
+Serial.print("   angulo servo 0= ");  Serial.println(angular0);
+
+delay(15);
+}
+
+//---- Joystick y servo 1 ---------------------------- 
+//--- Extensiónn (posición 0º) ------------- 
+
+posicion1 = analogRead(joy1); //  Se lee la posición
+if (posicion1<450)
+{
+angular1 = angular1 - 8;   
+if(angular1<2)  
+{
+angular1 = 2; // El giro no supera el valor 2
+}
+setServo(motor1,angular1); // Se mueve el servo
+
+// --------- Se leen los valores en el monitor serie ------------
+Serial.print("joystick 1= ");  Serial.print(posicion1); 
+Serial.print("   angulo servo 1= ");  Serial.println(angular1);
+
+delay(15);
+}
+
+//-------------------- Flexión (posición 180º) ---------- 
+if (posicion1>600) 
+{
+angular1 = angular1 + 8;
+if(angular1> 150)   //Fin de carrera. Si aumenta el valor, aumenta el ángulo
+{
+angular1 = 150; // El giro no supera el valor 150
+}
+setServo(motor1,angular1); // Se mueve el servo 
+
+// --------- Se leen los valores en el monitor serie ------------
+Serial.print("joystick 1= ");  Serial.print(posicion1);
+Serial.print("   angulo servo 1= ");  Serial.println(angular1);
+delay(15);
+}
+
+//---- Joystick y servo 2 ----------------------------  
+//---Extensión (posición 0º) ---
+
+posicion2 = analogRead(joy2); // Se lee la posición
+if (posicion2<450)
+{
+angular2 = angular2 - 8;
+if(angular1< 0)
+{
+angular2 = 0;  // El giro no supera el valor 0
+}
+setServo(motor2,angular2);   //Se mueve el servo 
+
+// --------- Se leen los valores en el monitor serie ------------
+Serial.print("joystick 2= ");  Serial.print(posicion2);
+Serial.print("   angulo servo 2= ");  Serial.println(angular2);
+
+delay(15);
+}
+
+//-------------------- Flexión (posición 180º) --------
+if (posicion2>600) 
+{
+angular2 = angular2 + 8;
+if(angular2> 120)   //Fin de carrera. Si aumenta el valor, aumenta el ángulo
+{
+angular2 = 120;   //El giro no supera el valor 120
+}
+setServo(motor2,angular2); //Se mueve el servo 
+
+// --------- Se leen los valores en el monitor serie ------------
+Serial.print("joystick 2= ");  Serial.print(posicion2);
+Serial.print("   angulo servo 2= ");  Serial.println(angular2);
+
+delay(15);
+}
+
+
+// ------------------------ SERVOS DERECHA. CAMBIO SENTIDO SERVOS SIGUIENTES
+
+//---- Joystick y servo 3 ---- Cambio sentido de giro del servo ----------
+//---Extensión (posición 0º) -------
+
+posicion3 = analogRead(joy3); // Se lee la posición
+if (posicion3< 450) 
+{
+     angular3 = angular3 + 8; 
+if(angular3> 180)   //Cambio de sentido, valor 0 x 180  
+{
+angular3 = 180;  //El giro no supera el valor 180
+}
+setServo(motor3,angular3);   //Se mueve el servo
+
+// --------- Se leen los valores en el monitor serie ------------
+Serial.print("joystick 3= ");  Serial.print(posicion3);
+Serial.print("   angulo servo 3= ");  Serial.println(angular3);
+
+delay(15);
+}
+
+//-------------------- Flexión (posición 180º) ------------
+if (posicion3> 600)
+{
+     angular3 = angular3 - 8;   
+if(angular3< 0)   //Cambio de sentido. Modifica  valor 180 x 0. Si aumenta el valor, reduce el ángulo
+{
+angular3 = 0;  // El giro no supera el valor 0 fin carrera
+}
+setServo(motor3,angular3);   //Se mueve el servo 
+
+// --------- Se leen los valores en el monitor serie ------------
+Serial.print("joystick 3= ");  Serial.print(posicion3);
+Serial.print("   angulo servo 3= ");  Serial.println(angular3);
+
+delay(15);
+}
+
+
+//---- Joystick y servo 4 -----------------------------
+//--- Extensión (posición 0º)--- 
+
+posicion4 = analogRead(joy4);   //Se lee la osición
+if (posicion4<450)
+{
+     angular4 = angular4 + 8;   //Cambio sentido, valor -3 x +3
+if(angular4> 180)   //Cambio sentido 0 x 180 
+{
+angular4 = 180;  // El giro no supera el valor 180
+}
+setServo(motor4,angular4);   //Se mueve el servo 
+
+// --------- Se leen los valores en el monitor serie ------------
+Serial.print("joystick 4= ");  Serial.print(posicion4);
+Serial.print("   angulo servo 4= ");  Serial.println(angular4);
+
+delay(15);
+}
+//-------------------- Flexión (posición 180º) ---
+if (posicion4>600)
+{
+     angular4 = angular4 - 8;  //Cambio sentido, valor +3 x -3. 
+if(angular4< 20)  
+{
+angular4 = 20;  // El gir no supera el valor 20. Fin carrera
+}
+setServo(motor4,angular4);   //Se mueve el servo 
+
+// --------- Se leen los valores en el monitor serie ------------
+Serial.print("joystick 4= ");  Serial.print(posicion4);
+Serial.print("   angulo servo 4= ");  Serial.println(angular4);
+
+delay(15);
+}
+
+//---- Joystick y servo 5 ------- 
+//---Extensión (posición 0º)--- 
+
+posicion5 = analogRead(joy5);   //Se lee la posición
+if (posicion5<450)
+{
+angular5 = angular5 + 5;   //Cambio sentido. Valor - 3 x +3 
+if(angular5> 130)
+{
+angular5 =  130;   //El giro no supera el valor 130
+}
+setServo(motor5,angular5);   //Se mueve el servo 
+
+// --------- Se leen los valores en el monitor serie ------------
+Serial.print("joystick 5= ");  Serial.print(posicion5);
+Serial.print("   angulo servo 5= ");  Serial.println(angular5);
+
+delay(15);
+}
+//-------------------- Flexión (posición 180º)---------------
+if (posicion5>600)
+{
+angular5 = angular5 - 5;   //Cambio de sentido. Valor +5 x -5
+
+//El ángulo de fin de carrera para este servo, sería 0, pero
+//el movimiento de la articulación es mucho más corta que el resto
+if(angular5< 100)   //Modifica 180 x 30 fin carrera. Si aumenta el valor, reduce el ángulo
+{
+angular5 = 100;   //El giro no supera el valor 100
+}
+setServo(motor5,angular5);   //Se mueve el servo  
+
+// --------- Se leen los valores en el monitor serie ------------
+Serial.print("joystick 5= ");  Serial.print(posicion5);
+Serial.print("   angulo servo 5= ");  Serial.println(angular5);
+
+delay(15);
+}
+
+
+}
+//------------------- Fin del programa -----------------------------------------------
+
+
